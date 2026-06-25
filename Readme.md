@@ -1,24 +1,10 @@
 # K2 Extruder Nozzle-Cam Project
 
-more documentation will be added soon.
-
-This project lets you install the 3DO Nozzle Camera V2 into the K2 Plus (and potentially the K2 & K2 Pro) Series Extruder.
-there are printable .STEP files to _replace_ the stock AI Camera, and files to keep the stock AI Camera.
-I recommend printing those parts in ASA or any CF composite of ASA.
-
-There is currently no place to mount the 3DO Camera board if you choose to keep the Stock AI Camera, however i've had success storing it next to the extruder toolboard, in the rear of the extruder carriage, provided your clips are intact.
-
-Personally, I recommend removing the Stock AI Camera, there's not much benefit from having it, despite a few calibrations that use it.
-
+This is my first attempt at doing a fork ever, from the k2 extruder nozzle-cam project, Everyone is welcome to improve, add or fix anything wrong in it. Work in progress.
 ## Installation
 
-Run `sh ./install.sh` to drag all the required files over, and include a handy recording macro into your printer.cfg
+Run `sh ./install.sh` to drag all the required files over
 Simple as that.
-
-Use `START_PRINT_RECORDING` to start a recording, optionally add this line into your slicer's Start Print macro block, or your `START_PRINT` macro inside `gcode_macro.cfg`.
-
-Use `STOP_PRINT_RECORDING` to stop the recording, again it's recommended to add this into your slicer's End Print macro block, or the relevant onboard macro on your printer.
-
 
 Below you will find a modified readme of the 3DO Nozzle Camera provided by 3DO's github.
 Feel free to refer to the User Controls section for command functionality.
@@ -32,14 +18,12 @@ I'll be providing my commands used here for reference until such time as a front
 - 5cm - Needs LED's
 - 10cm - Needs LED's
 - 25cm - Needs LED's
-- 5cm with LEDs - Recommended (but not tested) for K2 Plus
-- 10cm with LEDs - Tested for K2 Plus
-- 25cm with LEDs - Too Long for K2 Plus
+- 5cm with LEDs - Recommended (Needed for my mount) for K2 Plus
 
 ## Camera Options
 - **Nozzle Camera (Glued)**: Not Recommended.
-- **Nozzle Camera (Adjustable)**: Lens focus can be adjusted by rotating the lens.
-- **Enclosure Camera (Adjustable)**: Lens focus can be adjusted by rotating the lens, FoV 120°.
+- **Nozzle Camera (Adjustable)**: Lens focus can be adjusted by rotating the lens. (Recommended, used on my mount)
+- **Enclosure Camera (Adjustable)**: Lens focus can be adjusted by rotating the lens, FoV 120°. (not tested but I've been told its size is similar to the Nozzle camera so it might be compatible with my mount)
 
 ## Specifications
 |                         | 4K (Sony IMX258)     	|
@@ -96,4 +80,5 @@ _**Tested for 48hrs without issue, use with caution._
 
 ### Credits
 
+James Campbell - Original creator of the nozzle cam project.
 Jamin Collins - Ensure-Encluded.py

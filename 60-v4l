@@ -1,162 +1,36 @@
 # I go in /etc/hotplug.d/usb/
 [ "$ACTION" = "bind" ] && [ "$INTERFACE" = "14/1/0" ] && {
-    logger -t uvc "[BIND] ACTION=$ACTION INTERFACE=$INTERFACE DEVICENAME=$DEVICENAME DEVPATH=$DEVPATH"
 
     mkdir -p /dev/v4l/by-id
-    model=$(get_sn_mac.sh model)
-    logger -t uvc "[BIND] Model detected: $model"
 
     [ -d /sys/$DEVPATH/video4linux ] && {
         videos=$(ls /sys/$DEVPATH/video4linux)
-        logger -t uvc "[BIND] Found video devices: $videos"
-        if [ "$model" = "CR-K1 Max" ]; then
-            for node in $videos
-            do
-                h264_result=$(v4l2-ctl -d /dev/$node --list-framesizes H264 2>&1 | wc -l)
-                if [ $h264_result -gt 1 ]; then
-                    logger -t uvc "[BIND] $node SUPPORTS H264 format (lines: $h264_result)"
-                    ln -s /dev/$node /dev/v4l/by-id/main-$node
-                    logger -t uvc "[BIND] Created symlink: /dev/v4l/by-id/main-$node -> /dev/$node"
-                    echo /dev/v4l/by-id/main-$node > /tmp/.video_$DEVICENAME
-                    MDEV=main-$node ACTION=add /usr/bin/auto_uvc.sh &
-                else
-                    logger -t uvc "[BIND] $node does NOT support H264 format (lines: $h264_result)"
-                fi
-            done
-        else
-            # The actual meat of the hotplug modification, grab our two devices, and pull their device paths to link dynamically
-            CHAMBER_IFACE=""
-            CHAMBER_VIDEO=""
-            NOZZLE_IFACE=""
-            NOZZLE_VIDEO=""
+        for node in $videos
+        do
+            # 1. Chamber Camera Detection (H264)
+            if [ $(v4l2-ctl -d /dev/$node --list-framesizes H264 2>&1 | wc -l) -gt 1 ]; then
+                logger -t uvc "$node supports H264 format! Mapping as main-video."
+                ln -s /dev/$node /dev/v4l/by-id/main-$node
+                echo /dev/v4l/by-id/main-$node > /tmp/.video_$DEVICENAME
+                MDEV=main-$node ACTION=add /usr/bin/auto_uvc.sh &
 
-            for dev in /dev/video*; do
-                INFO="$(udevadm info -a -n "$dev")"
-
-                # --- get V4L2 index (device block) ---
-                INDEX="$(printf '%s\n' "$INFO" | awk '
-                    /looking at device/ {found=1; next}
-                    found && /looking at parent device/ {exit}
-                    found && /ATTR\{index\}/ {
-                    split($0, a, "\"")
-                    print a[2]
-                    exit
-                    }
-                ')"
-
-                # only keep primary stream
-                [ "$INDEX" != "0" ] && continue
-
-                # --- get interface name (parent block) ---
-                NAME="$(printf '%s\n' "$INFO" | awk '
-                    /looking at parent device/ {found=1; next}
-                    found && /looking at/ {exit}
-                    found && /ATTRS\{interface\}/ {
-                    split($0, a, "\"")
-                    print a[2]
-                    exit
-                    }
-                ')"
-
-                # --- get USB interface path (parent block) ---
-                IFACE="$(printf '%s\n' "$INFO" | awk '
-                    /looking at parent device/ {found=1; next}
-                    found && /looking at/ {exit}
-                    found && /KERNELS=="/ {
-                    split($0, a, "\"")
-                    print a[2]
-                    exit
-                    }
-                ')"
-
-                [ -z "$NAME" ] && continue
-
-                case "$NAME" in
-                    *"CREALITY CAM"*)
-                    CHAMBER_VIDEO="$(basename "$dev")"
-                    CHAMBER_IFACE="$IFACE"
-                    ;;
-                    *"3DO USB CAMERA V2"*)
-                    NOZZLE_VIDEO="$(basename "$dev")"
-                    NOZZLE_IFACE="$IFACE"
-                    ;;
-                esac
-            done
-
-            echo "Chamber camera: /dev/$CHAMBER_VIDEO  $CHAMBER_IFACE"
-            echo "Nozzle camera:  /dev/$NOZZLE_VIDEO   $NOZZLE_IFACE"
-
-            # OTG USB, for chamber camera only!
-            # The default USB port for chamber camera is 3-1:1.0
-            # but it may be changed to 3-1.X:1.0 with the addition of a USB hub being put between the stock camera port, and the chamber camera.
-            if [ "$DEVICENAME" = "$CHAMBER_IFACE" ]; then
-                logger -t uvc "[BIND] Main camera detected at $DEVICENAME, checking for H264 support"
-                for node in $videos
-                do
-                    h264_result=$(v4l2-ctl -d /dev/$node --list-framesizes H264 2>&1 | wc -l)
-                    if [ $h264_result -gt 1 ]; then
-                        logger -t uvc "[BIND] $node SUPPORTS H264 format (lines: $h264_result)"
-                        ln -s /dev/$node /dev/v4l/by-id/main-$node
-                        logger -t uvc "[BIND] Created symlink: /dev/v4l/by-id/main-$node -> /dev/$node"
-                        echo /dev/v4l/by-id/main-$node > /tmp/.video_$DEVICENAME
-                        MDEV=main-$node ACTION=add /usr/bin/auto_uvc.sh &
-                    else
-                        logger -t uvc "[BIND] $node does NOT support H264 format (lines: $h264_result)"
-                    fi
-                done
-            # The external USB port for the K2 Plus is 1-1.1:1.0, run `udevadm info /dev/videoX` to check the DEVPATH for your added camera, and change the next line accordingly.
-            # Yet to get the internal hub modification's USB port DEVPATH, so keep the external 1-1.1:1.0 for now.
-            elif [ "$DEVICENAME" = "$NOZZLE_IFACE" ]; then
-            # USB HUB port,
-                logger -t uvc "[BIND] Nozzle camera detected at $DEVICENAME, checking for MJPG support"
-                for node in $videos
-                do
-                    mjpg_result=$(v4l2-ctl -d /dev/$node --list-framesizes MJPG 2>&1 | wc -l)
-                    if [ $mjpg_result -gt 1 ]; then
-                        logger -t uvc "[BIND] $node SUPPORTS MJPG format (lines: $mjpg_result)"
-                        ln -s /dev/$node /dev/v4l/by-id/nozzle-$node
-                        logger -t uvc "[BIND] Created symlink: /dev/v4l/by-id/nozzle-$node -> /dev/$node"
-                        echo /dev/v4l/by-id/nozzle-$node > /tmp/.video_$DEVICENAME
-                        MDEV=nozzle-$node ACTION=add /usr/bin/auto_uvc.sh &
-                    else
-                        logger -t uvc "[BIND] $node does NOT support MJPG format (lines: $mjpg_result)"
-                    fi
-                done
-            else
-            # stock AI nozzle-camera only!
-                logger -t uvc "[BIND] FALLBACK to sub-camera - DEVICENAME=$DEVICENAME does not match known ports"
-                logger -t uvc "[BIND] Sub camera detected at $DEVICENAME, checking for MJPG support"
-                for node in $videos
-                do
-                    mjpg_result=$(v4l2-ctl -d /dev/$node --list-framesizes MJPG 2>&1 | wc -l)
-                    if [ $mjpg_result -gt 1 ]; then
-                        logger -t uvc "[BIND] $node SUPPORTS MJPG format (lines: $mjpg_result)"
-                        ln -s /dev/$node /dev/v4l/by-id/sub-$node
-                        logger -t uvc "[BIND] Created symlink: /dev/v4l/by-id/sub-$node -> /dev/$node"
-                        echo /dev/v4l/by-id/sub-$node > /tmp/.video_$DEVICENAME
-                        MDEV=sub-$node ACTION=add /usr/bin/auto_uvc.sh &
-                    else
-                        logger -t uvc "[BIND] $node does NOT support MJPG format (lines: $mjpg_result)"
-                    fi
-                done
+            # 2. Auxiliary Camera Detection (MJPG -> mapped directly to $node, e.g. video0)
+            elif [ $(v4l2-ctl -d /dev/$node --list-framesizes MJPG 2>&1 | wc -l) -gt 1 ]; then
+                logger -t uvc "$node supports MJPG format! Mapping directly to $node."
+                ln -s /dev/$node /dev/v4l/by-id/$node
+                echo /dev/v4l/by-id/$node > /tmp/.video_$DEVICENAME
+                MDEV=$node ACTION=add /usr/bin/auto_uvc.sh &
             fi
-        fi
+        done
     }
 }
-
 [ "$ACTION" = "unbind" ] && [ "$INTERFACE" = "14/1/0" ] && {
-    logger -t uvc "[UNBIND] ACTION=$ACTION INTERFACE=$INTERFACE DEVICENAME=$DEVICENAME DEVPATH=$DEVPATH"
 
     [ -f /tmp/.video_$DEVICENAME ] && {
         node_path=$(cat /tmp/.video_$DEVICENAME)
-        logger -t uvc "[UNBIND] Removing device: $node_path"
         MDEV=${node_path##*/} ACTION=remove /usr/bin/auto_uvc.sh
-        logger -t uvc "[UNBIND] Removed symlink: $node_path"
+        logger -t uvc "remove soft link: $node_path"
         rm -f $node_path
         rm -f /tmp/.video_$DEVICENAME
-        logger -t uvc "[UNBIND] Cleaned up metadata file: /tmp/.video_$DEVICENAME"
-    } || {
-        logger -t uvc "[UNBIND] No metadata file found for: $DEVICENAME"
     }
 }
-

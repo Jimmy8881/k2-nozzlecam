@@ -16,6 +16,12 @@ if [ -e /etc/hotplug.d/usb/60-v4l.bak ]; then
     mv /etc/hotplug.d/usb/60-v4l.bak /etc/hotplug.d/usb/60-v4l
 fi
 
+# remove the installed file and restore original rc.local if backup exists
+if [ -e /etc/rc.local.bak ]; then
+    rm -f /etc/rc.local
+    mv /etc/rc.local.bak /etc/rc.local
+fi
+
 # remove the old symlinks
 rm -f /usr/bin/ustreamer
 rm -f /usr/share/klipper/klippy/extras/gcode_shell_command.py

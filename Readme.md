@@ -3,7 +3,7 @@
 This is my first attempt at doing a fork ever, from the k2 extruder nozzle-cam project, Everyone is welcome to improve, add or fix anything wrong in it. Work in progress.
 ## Installation
 
-Find your printer IP number
+Find your printer IP address
 SSH to your printer
 
 Replace `<printer-ip>` with your printer IP and run the installer with the following command:

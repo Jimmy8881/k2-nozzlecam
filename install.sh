@@ -20,6 +20,14 @@ fi
 # symlink the udev rule into place
 ln -sf "${SCRIPT_DIR}/60-v4l" /etc/hotplug.d/usb/60-v4l
 
+# backup original rc.local if present
+if [ -e /etc/rc.local ] || [ -L /etc/rc.local ]; then
+    cp -p /etc/rc.local /etc/rc.local.bak
+fi
+
+#copy the rc.local script to /etc/
+cp -f "${SCRIPT_DIR}/etc/rc.local" /etc/rc.local
+
 # symlink the ustreamer binary into /usr/bin
 ln -sf "${SCRIPT_DIR}/ustreamer" /usr/bin/ustreamer
 
@@ -44,6 +52,7 @@ chmod 755 /usr/bin/auto_uvc.sh
 chmod 755 /etc/init.d/ustreamer
 chmod 755 /etc/ustreamer/cameras.conf
 chmod 755 /usr/bin/ustreamer
+chmod 775 /etc/rc.local
 
 # add the macro into the printer.cfg file
 python "${SCRIPT_DIR}/ensure_included.py" \

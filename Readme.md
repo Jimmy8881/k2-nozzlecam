@@ -1,6 +1,8 @@
 # K2 Extruder Nozzle-Cam Project
 
-This is my first attempt at doing a fork ever, from the k2 extruder nozzle-cam project, Everyone is welcome to improve, add or fix anything wrong in it. Work in progress.
+This Fork of the Nozzlecam script includes an installer that will let you pick to install this on the stock creality Firmware or Jacobs kalico firmware. Simply run the command line and it will automatically copy and install the files for you.
+It will Install macros for the 3DO camera so it can be controlled through the fluidd UI so there's no need to SSH to change any of its settings.
+
 ## Installation
 
 Find your printer IP address and

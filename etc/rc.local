@@ -1,0 +1,24 @@
+# Put your custom commands here that should be executed once
+# the system init finished. By default this file does nothing.
+
+level=$(fw_printenv -n loglevel)
+if [ "x$level" != "x0" ]; then
+    fw_setenv loglevel 0
+fi
+
+# Enable the toolhead camera USB port on boot by pulling GPIO 162 low
+if [ ! -d /sys/class/gpio/gpio162 ]; then
+    echo 162 > /sys/class/gpio/export
+    sleep 0.5  # Crucial: Give the Creality OS time to create the gpio162 files
+fi
+echo out > /sys/class/gpio/gpio162/direction
+
+# Background loop to counteract the Creality proprietary camera service
+(
+    for i in $(seq 1 45); do
+        echo 0 > /sys/class/gpio/gpio162/value
+        sleep 2
+    done
+) &
+
+exit 0

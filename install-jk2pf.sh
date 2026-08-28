@@ -7,6 +7,13 @@ SCRIPT_DIR="$(readlink -f $(dirname $0))"
 # copy the nozzle_cam.env file to /etc/ustreamer/nozzle_cam.env
 cp -f "${SCRIPT_DIR}/nozzle_cam.env" /etc/ustreamer/nozzle_cam.env
 
+# backup original stockcam.env if present
+if [ -e /etc/ustreamer/stockcam.env ] || [ -L /etc/ustreamer/stockcam.env ]; then
+    cp -p /etc/ustreamer/stockcam.env /etc/ustreamer/stockcam.bak
+
+# copy the stockcam.env file to /etc/ustreamer/stockcam.env
+cp -f "${SCRIPT_DIR}/stockcam.env" /etc/ustreamer/stockcam.env
+    
 # Start the camera service immediately
 systemctl start ustreamer@nozzle_cam
 

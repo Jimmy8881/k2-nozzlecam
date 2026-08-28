@@ -1,5 +1,5 @@
 # Slot 1: Creality Camera
-SUBSYSTEM=="video4linux", ATTRS{product}=="*CREALITY*", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="chamber_cam"
+#SUBSYSTEM=="video4linux", ATTRS{product}=="*CREALITY*", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="chamber_cam"
 
 # Slot 2: 3DO Nozzle Camera
 SUBSYSTEM=="video4linux", ATTRS{product}=="*3DO*", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="nozzle_cam"

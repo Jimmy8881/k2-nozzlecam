@@ -51,7 +51,6 @@ start_instance() {
         --resolution="$res" \
         --desired-fps="$fps" \
         --workers=1 \
-        --buffers=2 \
         --allow-origin="*"
     procd_set_param respawn
     procd_close_instance

@@ -56,6 +56,6 @@ chmod 775 /etc/rc.local
 
 # add the macro into the printer.cfg file
 python "${SCRIPT_DIR}/ensure_included.py" \
-    /root/printer_data/config/custom/main.cfg v4lctls.cfg
+    ~/printer_data/config/custom/main.cfg v4lctls.cfg
 
 echo "Installation complete. reboot the system to apply changes."

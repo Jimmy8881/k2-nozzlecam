@@ -53,15 +53,16 @@ rm -f /usr/share/klipper/klippy/extras/gcode_shell_command.py
 # remove the v4lctls.cfg file
 rm -f /mnt/UDISK/printer_data/config/custom/v4lctls.cfg
 
-# Stop the ustreamer service
-/etc/init.d/ustreamer stop
-
-# Disable the ustreamer service
-/etc/init.d/ustreamer disable
+# Stop and disables the ustreamer service
+/etc/init.d/ustreamer stop || true
+/etc/init.d/ustreamer disable || true
 
 # remove the init.d ustream script and config folder
 rm -rf /etc/ustreamer
 rm -f /etc/init.d/ustreamer
+
+# remove the camera Macro configurations  
+python "${SCRIPT_DIR}/undo_macro_sorting.py"
 
 # remove the v4lctls gcode macro line from main.cfg
 python "${SCRIPT_DIR}/ensure_included.py" \

@@ -29,4 +29,37 @@ cp -f "${SCRIPT_DIR}/3dov4lctls.cfg" /mnt/UDISK/printer_data/config/3dov4lctls.c
 python "${SCRIPT_DIR}/ensure_included.py" \
     ~/printer_data/config/overrides.cfg 3dov4lctls.cfg
 
+# sort the camera Macros by category and colors  
+python "${SCRIPT_DIR}/macro_sorting.py"
+
+# Auto-detect printer IP on BusyBox/Creality OS environments
+PRINTER_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7}')
+
+# Fallback in case ip route fails
+if [ -z "$PRINTER_IP" ]; then
+    PRINTER_IP=$(ifconfig wlan0 2>/dev/null | awk '/inet / {print $2}' | sed 's/addr://')
+fi
+
+# Final fallback for Ethernet connection
+if [ -z "$PRINTER_IP" ]; then
+    PRINTER_IP=$(ifconfig eth0 2>/dev/null | awk '/inet / {print $2}' | sed 's/addr://')
+fi
+
+echo "Detected current printer IP: ${PRINTER_IP}"
+
+echo "Registering 3DO Nozzle Camera with Moonraker..."
+curl -s -X POST http://localhost:7125/server/webcams/item \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"3DO Nozzle Camera\",
+    \"enabled\": true,
+    \"icon\": \"mdiPrinter3dNozzle\",
+    \"aspect_ratio\": \"4:3\",
+    \"location\": \"nozzle\",
+    \"service\": \"uv4l-mjpeg\",
+    \"stream_url\": \"http://${PRINTER_IP}:8081/?action=stream\",
+    \"snapshot_url\": \"http://${PRINTER_IP}:8081/?action=snapshot\"
+  }"
+
+
 echo "Installation complete. reboot klipper to load the new 3DO camera service and load the control macros."

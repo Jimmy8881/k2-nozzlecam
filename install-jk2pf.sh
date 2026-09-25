@@ -15,8 +15,9 @@ fi
 # copy the stockcam.env file to /etc/ustreamer/stockcam.env
 cp -f "${SCRIPT_DIR}/stockcam.env" /etc/ustreamer/stockcam.env
     
-# Start the camera service immediately
-systemctl start ustreamer@nozzle_cam
+# copy camera-assignment.rules to /etc/udev/rules.d/camera-assignment.rules
+cp -f "${SCRIPT_DIR}/camera-assignment.rules" /etc/udev/rules.d/camera-assignment.rules
+chmod 755 /etc/udev/rules.d/camera-assignment.rules
 
 # Enable the service to start automatically on system boot
 systemctl enable ustreamer@nozzle_cam
@@ -28,8 +29,4 @@ cp -f "${SCRIPT_DIR}/3dov4lctls.cfg" /mnt/UDISK/printer_data/config/3dov4lctls.c
 python "${SCRIPT_DIR}/ensure_included.py" \
     ~/printer_data/config/overrides.cfg 3dov4lctls.cfg
 
-# copy camera-assignment.rules to /etc/udev/rules.d/camera-assignment.rules
-cp -f "${SCRIPT_DIR}/camera-assignment.rules" /etc/udev/rules.d/camera-assignment.rules
-chmod 755 /etc/udev/rules.d/camera-assignment.rules
-
-echo "Installation complete. reboot klipper to load the new 3DO camera control macros."
+echo "Installation complete. reboot klipper to load the new 3DO camera service and load the control macros."

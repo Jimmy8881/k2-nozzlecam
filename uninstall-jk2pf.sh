@@ -14,9 +14,13 @@ rm -f /etc/ustreamer/nozzle_cam.env
 if [ -e /etc/ustreamer/stockcam.bak ]; then
     rm -f /etc/ustreamer/stockcam.env
     mv /etc/ustreamer/stockcam.bak /etc/ustreamer/stockcam.env
+fi
 
 # remove the camera-assignment.rules file
 rm -f /etc/udev/rules.d/camera-assignment.rules
+
+# remove the camera Macro configurations  
+python "${SCRIPT_DIR}/undo_macro_sorting.py"
 
 # remove the 3dov4lctls gcode macro line from overrides.cfg
 python "${SCRIPT_DIR}/ensure_included.py" \

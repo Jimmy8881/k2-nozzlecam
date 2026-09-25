@@ -4,8 +4,27 @@ set -e
 
 SCRIPT_DIR="$(readlink -f $(dirname $0))"
 
-# remove the v4lctls.cfg file
-rm -f /mnt/UDISK/printer_data/config/v4lctls.cfg
+echo "Removing 3DO Nozzle Camera from Moonraker database..."
+
+# Fetch the list of webcams and extract the UID for "3DO Nozzle Camera"
+WEBCAM_UID=$(curl -s http://localhost:7125/server/webcams/list | \
+  awk -v RS='{' '/"name": *"3DO Nozzle Camera"/ {print}' | \
+  sed -n 's/.*"uid": *"\([^"]*\)".*/\1/p')
+
+# If a matching entry is found in the database, delete it
+if [ -n "$WEBCAM_UID" ]; then
+    echo "Found registration with UID: ${WEBCAM_UID}. Deleting..."
+    curl -s -X DELETE "http://localhost:7125/server/webcams/item?uid=${WEBCAM_UID}" || true
+else
+    echo "No matching Moonraker webcam registration found. Skipping database removal."
+fi
+
+# disable and stop the ustreamer service
+systemctl disable ustreamer@nozzle_cam || true
+systemctl stop ustreamer@nozzle_cam || true
+
+# remove the 3dov4lctls.cfg file
+rm -f /mnt/UDISK/printer_data/config/3dov4lctls.cfg
 
 # remove the nozzle_cam.env file
 rm -f /etc/ustreamer/nozzle_cam.env

@@ -14,7 +14,7 @@ CATEGORY_NAME = "3DO nozzle camera"
 MANAGED_MACROS = {
     "cam_settings", "LED_ON", "LED_OFF", "TOGGLE_CAM_LED", "RESET_CAM_LED_STATE",
     "saturation", "hue", "sharpness", "brightness", "contrast", "gamma", "gain",
-    "exposure_absolute", "auto_exposure", "exposure_manual", "white_balance_manual",
+    "exposure_absolute", "auto_exposure", "exposure_manual", "exposure_auto", "white_balance_manual",
     "white_balance_auto", "white_balance_temperature", "power_line_frequency_Off",
     "power_line_frequency_50", "power_line_frequency_60", "focus_manual", "focus_auto",
     "focus_absolute", "zoom_in", "zoom_mid", "zoom_out", "Zoom_absolute", "Tilt_absolute",
@@ -78,10 +78,14 @@ def remove_layout(namespace):
                 del item["color"]
                 has_changes = True
                 
-            # Clear alias if it matches our default uppercase generation pattern
-            if "alias" in item and item["alias"] == str(name).upper():
-                del item["alias"]
-                has_changes = True
+            # Clear alias if it matches default generation pattern or specialized mapping
+            if "alias" in item:
+                is_default_upper = item["alias"] == str(name).upper()
+                is_exposure_auto_exception = str(name).casefold() == "exposure_auto" and item["alias"] == "AUTO_EXPOSURE"
+                
+                if is_default_upper or is_exposure_auto_exception:
+                    del item["alias"]
+                    has_changes = True
 
         cleaned_stored.append(item)
 

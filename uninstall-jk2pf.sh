@@ -6,10 +6,19 @@ SCRIPT_DIR="$(readlink -f $(dirname $0))"
 
 echo "Removing 3DO Nozzle Camera from Moonraker database..."
 
-# Fetch the list of webcams and extract the UID for "3DO Nozzle Camera"
-WEBCAM_UID=$(curl -s http://localhost:7125/server/webcams/list | \
-  awk -v RS='{' '/"name": *"3DO Nozzle Camera"/ {print}' | \
-  sed -n 's/.*"uid": *"\([^"]*\)".*/\1/p')
+# Safely extract the UID using Python's native JSON module
+WEBCAM_UID=$(curl -s http://localhost:7125/server/webcams/list | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    webcams = data.get('result', {}).get('webcams', data.get('webcams', []))
+    for cam in webcams:
+        if cam.get('name') == '3DO Nozzle Camera':
+            print(cam.get('uid', ''))
+            break
+except Exception:
+    pass
+")
 
 # If a matching entry is found in the database, delete it
 if [ -n "$WEBCAM_UID" ]; then
@@ -19,12 +28,12 @@ else
     echo "No matching Moonraker webcam registration found. Skipping database removal."
 fi
 
-# disable and stop the ustreamer service
+# disable and stop the ustreamer service (|| true ensures it won't crash if already stopped)
 systemctl disable ustreamer@nozzle_cam || true
 systemctl stop ustreamer@nozzle_cam || true
 
-# remove the 3dov4lctls.cfg file
-rm -f /mnt/UDISK/printer_data/config/3dov4lctls.cfg
+# remove the 3dov4lctrls.cfg file
+rm -f /mnt/UDISK/printer_data/config/3dov4lctrls.cfg
 
 # remove the nozzle_cam.env file
 rm -f /etc/ustreamer/nozzle_cam.env

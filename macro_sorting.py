@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed the Fluidd layout for the 3DO Nozzle Camera control macros with hardware descriptions."""
+"""Seed the Fluidd layout for the 3DO Nozzle Camera control macros."""
 
 import json
 import os
@@ -10,54 +10,53 @@ import urllib.request
 
 CATEGORY_NAME = "3DO nozzle camera"
 
-# Macro layout configuration mapping
-# Format: (Macro Name, Button Label Alias, Fluidd Color Hex, Dashboard Description)
+# Macro Layout configuration mapping (Macro Name, Button Label Alias, Fluidd Color Hex)
 MACRO_LAYOUT = (
     # Core Admin
-    ("cam_settings", "CAM_SETTINGS", "#2196F3", "Output all available v4l2 camera controls to the console"),
+    ("cam_settings", "CAM_SETTINGS", "#2196F3"),
     
     # LED Control
-    ("LED_ON", "LED_ON", "#FF9800", "Turn Nozzle Camera ring light ON"),
-    ("LED_OFF", "LED_OFF", "#FF9800", "Turn Nozzle Camera ring light OFF"),
-    ("TOGGLE_CAM_LED", "TOGGLE_CAM_LED", "#FF9800", "Smart toggle for the 3DO nozzle camera LED"),
-    ("RESET_CAM_LED_STATE", "RESET_CAM_LED_STATE", "#FF9800", "Force reset the macro toggle state to OFF if out of sync"),
+    ("LED_ON", "LED_ON", "#FF9800"),
+    ("LED_OFF", "LED_OFF", "#FF9800"),
+    ("TOGGLE_CAM_LED", "TOGGLE_CAM_LED", "#FF9800"),
+    ("RESET_CAM_LED_STATE", "RESET_CAM_LED_STATE", "#FF9800"),
     
     # Image Quality / Color
-    ("saturation", "SATURATION", "#1AED07", "min=0, max=100, step=1, default=70"),
-    ("hue", "HUE", "#1AED07", "min=-2000, max=2000, step=1, default=0"),
-    ("sharpness", "SHARPNESS", "#1AED07", "min=1, max=7, step=1, default=1"),
+    ("saturation", "SATURATION", "#1AED07"),
+    ("hue", "HUE", "#1AED07"),
+    ("sharpness", "SHARPNESS", "#1AED07"),
     
     # Exposure
-    ("brightness", "BRIGHTNESS", "#9C27B0", "min=0, max=64, step=1, default=15"),
-    ("contrast", "CONTRAST", "#9C27B0", "min=0, max=95, step=1, default=4"),
-    ("gamma", "GAMMA", "#9C27B0", "min=1, max=300, step=1, default=115"),
-    ("gain", "GAIN", "#9C27B0", "(ISO control) min=0, max=480, step=1, default=0"),
-    ("exposure_absolute", "EXPOSURE_ABSOLUTE", "#9C27B0", "exposure_time_absolute min=3, max=2047, step=1, default=166"),
-    ("auto_exposure", "AUTO_EXPOSURE", "#9C27B0", "Enable automatic exposure handling"),
-    ("exposure_manual", "EXPOSURE_MANUAL", "#9C27B0", "Lock manual exposure restrictions"),
+    ("brightness", "BRIGHTNESS", "#9C27B0"),
+    ("contrast", "CONTRAST", "#9C27B0"),
+    ("gamma", "GAMMA", "#9C27B0"),
+    ("gain", "GAIN", "#9C27B0"),
+    ("exposure_absolute", "EXPOSURE_ABSOLUTE", "#9C27B0"),
+    ("auto_exposure", "AUTO_EXPOSURE", "#9C27B0"),
+    ("exposure_manual", "EXPOSURE_MANUAL", "#9C27B0"),
     
     # Temperature / White Balance
-    ("white_balance_manual", "WHITE_BALANCE_MANUAL", "#00BCD4", "Disable automatic white balance adjustment"),
-    ("white_balance_auto", "WHITE_BALANCE_AUTO", "#00BCD4", "Enable automatic white balance handling"),
-    ("white_balance_temperature", "WHITE_BALANCE_TEMP", "#00BCD4", "min=2800, max=6500, step=1, default=4600"),
+    ("white_balance_manual", "WHITE_BALANCE_MANUAL", "#00BCD4"),
+    ("white_balance_auto", "WHITE_BALANCE_AUTO", "#00BCD4"),
+    ("white_balance_temperature", "WHITE_BALANCE_TEMP", "#00BCD4"),
     
     # Anti-Flicker / Utility
-    ("power_line_frequency_Off", "FREQ_OFF", "#2196F3", "Disable ambient light frequency compensation"),
-    ("power_line_frequency_50", "FREQ_50HZ", "#2196F3", "Set light flicker removal frequency filter to 50Hz"),
-    ("power_line_frequency_60", "FREQ_60HZ", "#2196F3", "Set light flicker removal frequency filter to 60Hz"),
+    ("power_line_frequency_Off", "FREQ_OFF", "#2196F3"),
+    ("power_line_frequency_50", "FREQ_50HZ", "#2196F3"),
+    ("power_line_frequency_60", "FREQ_60HZ", "#2196F3"),
     
     # Focus
-    ("focus_manual", "FOCUS_MANUAL", "#E91E63", "focus_automatic_continuous default=0"),
-    ("focus_auto", "FOCUS_AUTO", "#E91E63", "Enable uninterrupted continuous lens autofocus"),
-    ("focus_absolute", "FOCUS_ABSOLUTE", "#E91E63", "min=0, max=1023, step=1, default=0"),
+    ("focus_manual", "FOCUS_MANUAL", "#E91E63"),
+    ("focus_auto", "FOCUS_AUTO", "#E91E63"),
+    ("focus_absolute", "FOCUS_ABSOLUTE", "#E91E63"),
     
     # Transformation (Zoom, Tilt, Pan)
-    ("zoom_in", "ZOOM_IN", "#E91E63", "Quick scale focal lens zoom to 60"),
-    ("zoom_mid", "ZOOM_MID", "#E91E63", "Quick scale focal lens zoom to 30"),
-    ("zoom_out", "ZOOM_OUT", "#E91E63", "Quick scale focal lens zoom to 0"),
-    ("Zoom_absolute", "ZOOM_ABSOLUTE", "#E91E63", "zoom_absolute min=0, max=60, step=1, default=0"),
-    ("Tilt_absolute", "TILT_ABSOLUTE", "#E91E63", "tilt_absolute min=-648000, max=648000, step=3600, default=0"),
-    ("Pan_absolute", "PAN_ABSOLUTE", "#E91E63", "pan_absolute min=-648000, max=648000, step=3600, default=0"),
+    ("zoom_in", "ZOOM_IN", "#E91E63"),
+    ("zoom_mid", "ZOOM_MID", "#E91E63"),
+    ("zoom_out", "ZOOM_OUT", "#E91E63"),
+    ("Zoom_absolute", "ZOOM_ABSOLUTE", "#E91E63"),
+    ("Tilt_absolute", "TILT_ABSOLUTE", "#E91E63"),
+    ("Pan_absolute", "PAN_ABSOLUTE", "#E91E63"),
 )
 
 
@@ -66,7 +65,7 @@ class LayoutError(RuntimeError):
 
 
 def merge_layout(namespace):
-    """Return Fluidd namespace data with 3DO Nozzle Camera controls and descriptions added."""
+    """Return Fluidd namespace data with 3DO Nozzle Camera layout defaults added."""
     if not isinstance(namespace, dict):
         raise LayoutError("Fluidd database namespace is not an object")
 
@@ -84,7 +83,7 @@ def merge_layout(namespace):
     categories = [dict(item) for item in categories if isinstance(item, dict)]
     stored = [dict(item) for item in stored if isinstance(item, dict)]
 
-    # Locate an existing category by text name matching string
+    # Locate an existing category by name string matching
     category = next(
         (
             item
@@ -96,8 +95,8 @@ def merge_layout(namespace):
     )
     
     if category is None:
-        # Without explicit uuid library seed, we pass the category text string name as the base ID. 
-        # Moonraker tracks or translates this dynamically into its local layout maps.
+        # If it doesn't exist, we omit 'id' entirely. 
+        # Moonraker automatically assigns a unique string ID upon receiving the data structure.
         category_id = CATEGORY_NAME
         categories.append({"id": category_id, "name": CATEGORY_NAME})
     else:
@@ -115,7 +114,7 @@ def merge_layout(namespace):
         if item.get("name")
     }
 
-    for name, alias, color, description in MACRO_LAYOUT:
+    for name, alias, color in MACRO_LAYOUT:
         index = by_name.get(name.casefold())
         if index is None:
             stored.append(
@@ -125,7 +124,6 @@ def merge_layout(namespace):
                     "visible": True,
                     "disabledWhilePrinting": False,
                     "color": color,
-                    "description": description,
                     "categoryId": category_id,
                 }
             )
@@ -136,7 +134,6 @@ def merge_layout(namespace):
         if not item.get("alias"):
             item["alias"] = alias
         item["color"] = color
-        item["description"] = description
         
         current_category = str(item.get("categoryId", "0"))
         if (
@@ -216,9 +213,9 @@ def main():
 
     if changed:
         print(
-            "I: configured 29 Fluidd macros in the '{}' category with custom descriptions".format(CATEGORY_NAME)
+            "I: configured 29 Fluidd macros in the '{}' category".format(CATEGORY_NAME)
         )
-        print("I: refresh Fluidd to load the aliases, category, colors, and notes")
+        print("I: refresh Fluidd to load the aliases, category, and colors")
     else:
         print("I: 3DO macro layout is already configured")
 
@@ -227,4 +224,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -58,4 +58,8 @@ chmod 775 /etc/rc.local
 python "${SCRIPT_DIR}/ensure_included.py" \
     ~/printer_data/config/custom/main.cfg v4lctls.cfg
 
+# Enable and start the ustreamer service automatically
+/etc/init.d/ustreamer enable
+/etc/init.d/ustreamer start
+
 echo "Installation complete. reboot the system to apply changes."

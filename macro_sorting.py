@@ -95,8 +95,6 @@ def merge_layout(namespace):
     )
     
     if category is None:
-        # If it doesn't exist, we omit 'id' entirely. 
-        # Moonraker automatically assigns a unique string ID upon receiving the data structure.
         category_id = CATEGORY_NAME
         categories.append({"id": category_id, "name": CATEGORY_NAME})
     else:
@@ -115,33 +113,39 @@ def merge_layout(namespace):
     }
 
     for name, alias, color in MACRO_LAYOUT:
-        index = by_name.get(name.casefold())
-        if index is None:
-            stored.append(
-                {
-                    "name": name,
-                    "alias": alias,
-                    "visible": True,
-                    "disabledWhilePrinting": False,
-                    "color": color,
-                    "categoryId": category_id,
-                }
-            )
-            by_name[name.casefold()] = len(stored) - 1
-            continue
+        # Determine the targets to process (handles auto_exposure / exposure_auto matching)
+        target_names = [name.casefold()]
+        if name.casefold() == "auto_exposure":
+            target_names.append("exposure_auto")
 
-        item = stored[index]
-        if not item.get("alias"):
-            item["alias"] = alias
-        item["color"] = color
-        
-        current_category = str(item.get("categoryId", "0"))
-        if (
-            current_category == "0"
-            or current_category not in valid_category_ids
-            or category_names_by_id.get(current_category) == "uncategorized"
-        ):
-            item["categoryId"] = category_id
+        for target in target_names:
+            index = by_name.get(target)
+            if index is None:
+                stored.append(
+                    {
+                        "name": target,
+                        "alias": alias,
+                        "visible": True,
+                        "disabledWhilePrinting": False,
+                        "color": color,
+                        "categoryId": category_id,
+                    }
+                )
+                by_name[target] = len(stored) - 1
+                continue
+
+            item = stored[index]
+            if not item.get("alias"):
+                item["alias"] = alias
+            item["color"] = color
+            
+            current_category = str(item.get("categoryId", "0"))
+            if (
+                current_category == "0"
+                or current_category not in valid_category_ids
+                or category_names_by_id.get(current_category) == "uncategorized"
+            ):
+                item["categoryId"] = category_id
 
     macros["categories"] = categories
     macros["stored"] = stored
@@ -213,7 +217,7 @@ def main():
 
     if changed:
         print(
-            "I: configured 29 Fluidd macros in the '{}' category".format(CATEGORY_NAME)
+            "I: configured Fluidd macros in the '{}' category".format(CATEGORY_NAME)
         )
         print("I: refresh Fluidd to load the aliases, category, and colors")
     else:

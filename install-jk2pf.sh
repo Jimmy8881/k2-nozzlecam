@@ -54,7 +54,6 @@ curl -s -X POST http://localhost:7125/server/webcams/item \
     \"name\": \"3DO Nozzle Camera\",
     \"enabled\": true,
     \"icon\": \"mdiPrinter3dNozzle\",
-    \"aspect_ratio\": \"4:3\",
     \"location\": \"nozzle\",
     \"service\": \"uv4l-mjpeg\",
     \"stream_url\": \"http://${PRINTER_IP}:8081/?action=stream\",

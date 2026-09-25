@@ -10,6 +10,7 @@ cp -f "${SCRIPT_DIR}/nozzle_cam.env" /etc/ustreamer/nozzle_cam.env
 # backup original stockcam.env if present
 if [ -e /etc/ustreamer/stockcam.env ] || [ -L /etc/ustreamer/stockcam.env ]; then
     cp -p /etc/ustreamer/stockcam.env /etc/ustreamer/stockcam.bak
+fi
 
 # copy the stockcam.env file to /etc/ustreamer/stockcam.env
 cp -f "${SCRIPT_DIR}/stockcam.env" /etc/ustreamer/stockcam.env

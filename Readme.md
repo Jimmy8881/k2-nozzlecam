@@ -8,10 +8,10 @@ It will Install macros for the 3DO camera so it can be controlled through the fl
 Find your printer IP address and
 SSH to your printer
 
-Replace `<printer-ip>` with your printer IP and run the installer with the following command:
+Run the installer with the following command:
 
 ```
-wget https://github.com/Jimmy8881/k2-nozzlecam/archive/refs/heads/main.zip && unzip main.zip && cd k2-nozzlecam-main && chmod +x uninstaller.sh && chmod +x setup.sh && ./setup.sh -- <printer-ip> && rm ../main.zip
+wget https://github.com/Jimmy8881/k2-nozzlecam/archive/refs/heads/main.zip && unzip main.zip && cd k2-nozzlecam-main && chmod +x uninstaller.sh && chmod +x setup.sh && ./setup.sh && rm ../main.zip
 ```
 ## Uninstall
 

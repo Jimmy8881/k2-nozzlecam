@@ -4,6 +4,10 @@ set -e
 
 SCRIPT_DIR="$(readlink -f $(dirname $0))"
 
+# Stop and disables the ustreamer service
+/etc/init.d/ustreamer stop || true
+/etc/init.d/ustreamer disable || true
+
 echo "Removing 3DO Nozzle Camera from Moonraker database..."
 
 # Safely extract the UID using Python's native JSON module
@@ -52,10 +56,6 @@ rm -f /usr/share/klipper/klippy/extras/gcode_shell_command.py
 
 # remove the v4lctls.cfg file
 rm -f /mnt/UDISK/printer_data/config/custom/v4lctls.cfg
-
-# Stop and disables the ustreamer service
-/etc/init.d/ustreamer stop || true
-/etc/init.d/ustreamer disable || true
 
 # remove the init.d ustream script and config folder
 rm -rf /etc/ustreamer

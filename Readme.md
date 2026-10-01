@@ -20,7 +20,7 @@ wget https://github.com/Jimmy8881/k2-nozzlecam/archive/refs/heads/main.zip && un
 SSH to your printer, run
 
 ```
-find /mnt/UDISK -name uninstaller.sh -path "*k2-nozzlecam-main*" -exec sh {} \; 2>/dev/null
+find /mnt/UDISK -name uninstaller.sh -path "*k2-nozzlecam-main*" | head -n 1 | xargs -I {} sh {}
 ```
 
 Below you will find a modified readme of the 3DO Nozzle Camera provided by 3DO's github.

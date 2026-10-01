@@ -5,7 +5,7 @@ NOTE: this has only been tested with the k2 PLUS, I have no way to test on a k2 
 This Fork of the Nozzlecam script includes an installer that will let you pick to install this on the stock creality Firmware or Jacobs kalico firmware. Simply run the command line and it will automatically copy and install the files for you.
 It will Install macros for the 3DO camera so it can be controlled through the fluidd UI, it will also setup the camera in fluidd and sort the macros by category/color.
 
-![Alt Text]([https://raw.githubusercontent.com/Jimmy8881/k2-nozzlecam/refs/heads/main/sample.png])
+<img width="870" height="1072" alt="sample" src="https://github.com/user-attachments/assets/25c0386d-5d61-4a23-8a97-5a0105c1118f" />
 
 ## Installation
 

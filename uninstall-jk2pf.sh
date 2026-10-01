@@ -4,6 +4,10 @@ set -e
 
 SCRIPT_DIR="$(readlink -f $(dirname $0))"
 
+# disable and stop the ustreamer service (|| true ensures it won't crash if already stopped)
+systemctl disable ustreamer@nozzle_cam || true
+systemctl stop ustreamer@nozzle_cam || true
+
 echo "Removing 3DO Nozzle Camera from Moonraker database..."
 
 # Safely extract the UID using Python's native JSON module
@@ -27,10 +31,6 @@ if [ -n "$WEBCAM_UID" ]; then
 else
     echo "No matching Moonraker webcam registration found. Skipping database removal."
 fi
-
-# disable and stop the ustreamer service (|| true ensures it won't crash if already stopped)
-systemctl disable ustreamer@nozzle_cam || true
-systemctl stop ustreamer@nozzle_cam || true
 
 # remove the 3dov4lctrls.cfg file
 rm -f /mnt/UDISK/printer_data/config/3dov4lctrls.cfg

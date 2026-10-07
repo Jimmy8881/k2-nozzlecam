@@ -1,35 +1,47 @@
-[ "$ACTION" = "bind" ] && [ "$INTERFACE" = "14/1/0" ] && {
+# FIXED: Check SUBSYSTEM or ACTION variations to guarantee early boot tracking
+if [ "$SUBSYSTEM" = "video4linux" ] || [ "$ACTION" = "bind" ] || [ "$ACTION" = "add" ]; then
+    
+    # Allow the kernel extra room to completely settle system variables
+    sleep 1
 
     mkdir -p /dev/v4l/by-id
 
-    [ -d /sys/$DEVPATH/video4linux ] && {
-        videos=$(ls /sys/$DEVPATH/video4linux)
-        for node in $videos
-        do
-            # 1. Chamber Camera Detection (H264)
-            if [ $(v4l2-ctl -d /dev/$node --list-framesizes H264 2>&1 | wc -l) -gt 1 ]; then
-                logger -t uvc "$node supports H264 format! Mapping as main-video."
-                ln -s /dev/$node /dev/v4l/by-id/main-$node
-                echo /dev/v4l/by-id/main-$node > /tmp/.video_$DEVICENAME
-                MDEV=main-$node ACTION=add /usr/bin/auto_uvc.sh &
+    # If triggered via standard USB hotplug block, extract the node directory manually
+    if [ -z "$MDEV" ] && [ -d "/sys$DEVPATH/video4linux" ]; then
+        videos=$(ls "/sys$DEVPATH/video4linux")
+    elif [ -n "$MDEV" ]; then
+        videos="$MDEV"
+    else
+        # Direct fallback check for stock items if vars are stripped
+        videos=$(ls /sys/class/video4linux 2>/dev/null)
+    fi
 
-            # 2. Auxiliary Camera Detection (MJPG -> mapped directly to $node, e.g. video2)
-            elif [ $(v4l2-ctl -d /dev/$node --list-framesizes MJPG 2>&1 | wc -l) -gt 1 ]; then
-                logger -t uvc "$node supports MJPG format! Mapping directly to $node."
-                ln -s /dev/$node /dev/v4l/by-id/$node
-                echo /dev/v4l/by-id/$node > /tmp/.video_$DEVICENAME
+    for node in $videos
+    do
+        # Ensure we are handling the clean base name (e.g., video0 instead of a full path)
+        node=${node##*/}
+
+        # Protect against non-video subnodes (like metadata nodes) crashing v4l2-ctl
+        if echo "$node" | grep -q "index"; then
+            continue
+        fi
+
+        # 1. Main Stock Camera Handling (Force map video0 to avoid execution latency)
+        if [ "$node" = "video0" ]; then
+            logger -t uvc "Forcing explicit hotplug configuration map for stock $node."
+            ln -sf /dev/$node /dev/v4l/by-id/main-video0
+            echo /dev/v4l/by-id/main-video0 > /tmp/.video_stock_cam
+            MDEV=main-video0 ACTION=add /usr/bin/auto_uvc.sh &
+
+        # 2. Auxiliary Camera Verification (H264/MJPG fallback matching)
+        elif [ -e "/dev/$node" ]; then
+            # If it's your secondary camera node (video2), map it safely
+            if [ "$node" = "video2" ]; then
+                logger -t uvc "$node matched auxiliary nozzle camera configuration."
+                ln -sf /dev/$node /dev/v4l/by-id/$node
+                echo /dev/v4l/by-id/$node > /tmp/.video_aux_$node
                 MDEV=$node ACTION=add /usr/bin/auto_uvc.sh &
             fi
-        done
-    }
-}
-[ "$ACTION" = "unbind" ] && [ "$INTERFACE" = "14/1/0" ] && {
-
-    [ -f /tmp/.video_$DEVICENAME ] && {
-        node_path=$(cat /tmp/.video_$DEVICENAME)
-        MDEV=${node_path##*/} ACTION=remove /usr/bin/auto_uvc.sh
-        logger -t uvc "remove soft link: $node_path"
-        rm -f $node_path
-        rm -f /tmp/.video_$DEVICENAME
-    }
-}
+        fi
+    done
+fi

@@ -39,9 +39,9 @@ if [ -e /usr/bin/auto_uvc.sh.bak ]; then
 fi
 
 # remove the installed file/symlink and restore original 60-v4l if backup exists
-if [ -e /etc/hotplug.d/usb/60-v4l.bak ]; then
+if [ -e "${SCRIPT_DIR}/60-v4l.bak" ]; then
     rm -f /etc/hotplug.d/usb/60-v4l
-    mv /etc/hotplug.d/usb/60-v4l.bak /etc/hotplug.d/usb/60-v4l
+    mv "${SCRIPT_DIR}/60-v4l.bak" /etc/hotplug.d/usb/60-v4l
 fi
 
 # remove the installed file and restore original rc.local if backup exists

@@ -1,47 +1,73 @@
-# FIXED: Check SUBSYSTEM or ACTION variations to guarantee early boot tracking
 if [ "$SUBSYSTEM" = "video4linux" ] || [ "$ACTION" = "bind" ] || [ "$ACTION" = "add" ]; then
     
-    # Allow the kernel extra room to completely settle system variables
+    # Allow the kernel a moment to completely settle the sysfs file structure
     sleep 1
 
     mkdir -p /dev/v4l/by-id
 
-    # If triggered via standard USB hotplug block, extract the node directory manually
+    # Read the active video nodes
     if [ -z "$MDEV" ] && [ -d "/sys$DEVPATH/video4linux" ]; then
         videos=$(ls "/sys$DEVPATH/video4linux")
     elif [ -n "$MDEV" ]; then
         videos="$MDEV"
     else
-        # Direct fallback check for stock items if vars are stripped
         videos=$(ls /sys/class/video4linux 2>/dev/null)
     fi
 
+    # EXTRACT PLAIN TEXT HARDWARE KEYWORDS
+    USB_PROD=$(cat /sys$DEVPATH/product 2>/dev/null || cat /sys$DEVPATH/../product 2>/dev/null)
+    USB_MANU=$(cat /sys$DEVPATH/manufacturer 2>/dev/null || cat /sys$DEVPATH/../manufacturer 2>/dev/null)
+    
+    # Combine strings and convert to UPPERCASE to prevent capitalization mismatches
+    DEV_INFO=$(echo "${USB_PROD} ${USB_MANU}" | tr 'a-z' 'A-Z')
+
     for node in $videos
     do
-        # Ensure we are handling the clean base name (e.g., video0 instead of a full path)
         node=${node##*/}
 
-        # Protect against non-video subnodes (like metadata nodes) crashing v4l2-ctl
+        # Skip any metadata index interfaces to prevent loop crashes
         if echo "$node" | grep -q "index"; then
             continue
         fi
 
-        # 1. Main Stock Camera Handling (Force map video0 to avoid execution latency)
-        if [ "$node" = "video0" ]; then
-            logger -t uvc "Forcing explicit hotplug configuration map for stock $node."
+        # 1. KEYWORD MATCH: Creality Chamber Cam 
+        if echo "$DEV_INFO" | grep -q "CREALITY" || [ "$node" = "video0" ]; then
+            logger -t uvc "Keyword Match: Stock Cam ($USB_PROD) found on $node. Mapping as main-video0."
             ln -sf /dev/$node /dev/v4l/by-id/main-video0
-            echo /dev/v4l/by-id/main-video0 > /tmp/.video_stock_cam
+            echo /dev/v4l/by-id/main-video0 > /tmp/.video_$DEVICENAME
             MDEV=main-video0 ACTION=add /usr/bin/auto_uvc.sh &
 
-        # 2. Auxiliary Camera Verification (H264/MJPG fallback matching)
+        # 2. KEYWORD MATCH: 3DO Nozzle/Enclosure Camera
+        elif echo "$DEV_INFO" | grep -q "3DO"; then
+            logger -t uvc "Keyword Match: 3DO Camera ($USB_PROD) found on $node. Mapping directly as auxiliary."
+            ln -sf /dev/$node /dev/v4l/by-id/$node
+            echo /dev/v4l/by-id/$node > /tmp/.video_$DEVICENAME
+            MDEV=$node ACTION=add /usr/bin/auto_uvc.sh &
+
+        # 3. Fallback for any other standard third-party cameras
         elif [ -e "/dev/$node" ]; then
-            # If it's your secondary camera node (video2), map it safely
-            if [ "$node" = "video2" ]; then
-                logger -t uvc "$node matched auxiliary nozzle camera configuration."
-                ln -sf /dev/$node /dev/v4l/by-id/$node
-                echo /dev/v4l/by-id/$node > /tmp/.video_aux_$node
-                MDEV=$node ACTION=add /usr/bin/auto_uvc.sh &
-            fi
+            logger -t uvc "Generic Fallback: Unknown camera ($USB_PROD) found on $node. Mapping safely as auxiliary."
+            ln -sf /dev/$node /dev/v4l/by-id/$node
+            echo /dev/v4l/by-id/$node > /tmp/.video_$DEVICENAME
+            MDEV=$node ACTION=add /usr/bin/auto_uvc.sh &
         fi
     done
+fi
+
+# RESTORED & OPTIMIZED UNBIND SECTION
+# Triggers cleanly when ANY camera subsystem is pulled out
+if [ "$ACTION" = "unbind" ] || [ "$ACTION" = "remove" ]; then
+    if [ -f "/tmp/.video_$DEVICENAME" ]; then
+        node_path=$(cat /tmp/.video_$DEVICENAME)
+        
+        # Strip trailing chars to get raw node string (e.g. main-video0 or video2)
+        MDEV=${node_path##*/} 
+        
+        # Fire stop commands to kill cam_app or ustreamer before cleaning links
+        ACTION=remove /usr/bin/auto_uvc.sh
+        
+        logger -t uvc "Hotplug disconnect detected. Removing soft link: $node_path"
+        rm -f "$node_path"
+        rm -f "/tmp/.video_$DEVICENAME"
+    fi
 fi

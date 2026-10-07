@@ -14,7 +14,7 @@ ln -sf "${SCRIPT_DIR}/auto_uvc.sh" /usr/bin/auto_uvc.sh
 
 # backup original 60-v4l if present
 if [ -e /etc/hotplug.d/usb/60-v4l ] || [ -L /etc/hotplug.d/usb/60-v4l ]; then
-    cp -p /etc/hotplug.d/usb/60-v4l /etc/hotplug.d/usb/60-v4l.bak
+    cp -p /etc/hotplug.d/usb/60-v4l "${SCRIPT_DIR}/60-v4l.bak"
 fi
 
 # symlink the udev rule into place
